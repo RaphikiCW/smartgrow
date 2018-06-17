@@ -95,7 +95,7 @@ void loop()
     char strMoisture[16];
     char strLight[16];
 
-    // Conversion des float en char[]
+    // Moyennage des valeurs et conversion des float en char[]
     dtostrf(temperature/cpt, -1, 2, strTemp);
     dtostrf(humidity/cpt, -1, 2, strHum);
     dtostrf(moisture/cpt, -1, 2, strMoisture);
