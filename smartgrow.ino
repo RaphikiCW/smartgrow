@@ -2,7 +2,6 @@
 #include "YL100.h"
 #include "MAX44009.h"
 #include <ESP8266WiFi.h>
-#include <ESP8266WiFiMulti.h>
 #include <ESP8266HTTPClient.h>
 
 // WIFI SETTINGS
