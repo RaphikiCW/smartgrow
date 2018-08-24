@@ -34,12 +34,17 @@ DHT dht(PIN_DHT, DHT22);
 YL100 yl(PIN_YL100);
 Max44009 max44(0x4A, PIN_SDA, PIN_SCL);
 
-uint16_t cpt = 0;
+uint16_t cptLoop = 0;
 
 float temperature = 0;
 float humidity = 0;
 float moisture = 0;
 float light = 0;
+
+uint16_t cptTemperature = 0;
+uint16_t cptHumidity = 0;
+uint16_t cptMoisture = 0;
+uint16_t cptLight = 0;
 
 // Fonction exécutée au démarrage du système
 void setup()
@@ -79,21 +84,44 @@ void setup()
 void loop()
 {
   // Incrémentation de 1 du compteur de boucle
-  cpt++;
+  cptLoop++;
   
   // Lecture des capteurs
-  temperature += dht.readTemperature();
-  humidity += dht.readHumidity();
-  moisture += yl.readSoilMoisture();
-  light += max44.getLux();
+  float _temperature = dht.readTemperature();
+  if (_temperature >= -40 && _temperature <= 80)
+  {
+    temperature += _temperature;
+    cptTemperature++;
+  }
+
+  float _humidity = dht.readHumidity();
+  if (_humidity >= 0 && _humidity <= 200)
+  {
+    humidity += _humidity;
+    cptHumidity++;
+  }
+
+  float _moisture = yl.readSoilMoisture();
+  if (_moisture >= 0 && _moisture <= 200)
+  {
+    moisture += _moisture;
+    cptMoisture++;
+  }
+
+  float _light = max44.getLux();
+  if (_light >= 0 && _light <= 1000000)
+  {
+    light += _light;
+    cptLight++;
+  }
 
   // Si le compteur de boucle arrive à CPT_PUBLISH
-  if (cpt >= CPT_PUBLISH)
+  if (cptLoop >= CPT_PUBLISH)
   {
-    temperature = temperature / cpt;
-    humidity = humidity / cpt;
-    moisture = moisture / cpt;
-    light = light / cpt;
+    temperature = temperature / cptTemperature;
+    humidity = humidity / cptHumidity;
+    moisture = moisture / cptMoisture;
+    light = light / cptLight;
     
     // Affichage à l'écran des valeurs lues
     Serial.println("======");
@@ -126,18 +154,26 @@ void loop()
     url.reserve(256);
     url = "http://"+ String(THINGSPEAK_HOST) +"/update?api_key="+ String(THINGSPEAK_API_KEY);
 
-    // On intègre les champs et leurs valeurs dans l'url. On filtre ceux qui ont une valeur incorrecte.
-    if (temperature >= -40 && temperature <= 80)
+    // Ici on intègre les champs et leurs valeurs.
+    if (cptTemperature > 0)
       url += "&field"+ String(FIELD_TEMPERATURE) +"="+ temperature;
+    else
+      Serial.println("Unable to read temperature");
 
-    if (humidity >= 0 && humidity < 200)
+    if (cptHumidity > 0)
       url += "&field"+ String(FIELD_HUMIDITY) +"="+ humidity;
+    else
+      Serial.println("Unable to read humidity");
 
-    if (moisture >= 0 && moisture < 200)
+    if (cptMoisture > 0)
       url += "&field"+ String(FIELD_MOISTURE) +"="+ moisture;
+    else
+      Serial.println("Unable to read soil moisture");
 
-    if (light >= 0 && light < 1000000)
+    if (cptLight > 0)
       url += "&field"+ String(FIELD_LIGHT) +"="+ light;
+    else
+      Serial.println("Unable to read lux");
         
     Serial.printf("Fetching %s\n", url.c_str());      
 
@@ -157,12 +193,17 @@ void loop()
     http.end();
 
     // Remise à zéro
-    cpt = 0;
+    cptLoop = 0;
     
-    light = 0;
     temperature = 0;
     humidity = 0;
     moisture = 0;
+    light = 0;
+
+    cptTemperature = 0;
+    cptHumidity = 0;
+    cptMoisture = 0;
+    cptLight = 0;
   }
 
   // Temps en millisecondes où le programme ne fait rien
