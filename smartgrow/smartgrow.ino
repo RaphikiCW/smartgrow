@@ -80,7 +80,7 @@ void loop()
 {
   // Incrémentation de 1 du compteur de boucle
   cpt++;
-
+  
   // Lecture des capteurs
   temperature += dht.readTemperature();
   humidity += dht.readHumidity();
@@ -90,23 +90,17 @@ void loop()
   // Si le compteur de boucle arrive à CPT_PUBLISH
   if (cpt >= CPT_PUBLISH)
   {
-    char strTemp[16];
-    char strHum[16];
-    char strMoisture[16];
-    char strLight[16];
-
-    // Moyennage des valeurs et conversion des float en char[]
-    dtostrf(temperature/cpt, -1, 2, strTemp);
-    dtostrf(humidity/cpt, -1, 2, strHum);
-    dtostrf(moisture/cpt, -1, 2, strMoisture);
-    dtostrf(light/cpt, -1, 2, strLight);
-
+    temperature = temperature / cpt;
+    humidity = humidity / cpt;
+    moisture = moisture / cpt;
+    light = light / cpt;
+    
     // Affichage à l'écran des valeurs lues
     Serial.println("======");
-    Serial.printf("Temperature : %s C°\n", strTemp);
-    Serial.printf("Humidity : %s %%\n", strHum);
-    Serial.printf("Moisture : %s %%\n", strMoisture);
-    Serial.printf("Light : %s lux\n", strLight);
+    Serial.printf("Temperature : %s C°\n", String(temperature).c_str());
+    Serial.printf("Humidity : %s %%\n", String(humidity).c_str());
+    Serial.printf("Moisture : %s %%\n", String(moisture).c_str());
+    Serial.printf("Light : %s lux\n", String(light).c_str());
 
     // Si nous ne sommes plus connectés au WiFi
     if (WiFi.status() != WL_CONNECTED)
@@ -128,10 +122,24 @@ void loop()
     }
 
     // Création de l'URL
-    char url[256];
-    sprintf(url, "http://%s/update?api_key=%s&field%d=%s&field%d=%s&field%d=%s&field%d=%s", THINGSPEAK_HOST, THINGSPEAK_API_KEY, FIELD_TEMPERATURE, strTemp, FIELD_HUMIDITY, strHum, FIELD_MOISTURE, strMoisture, FIELD_LIGHT, strLight);
-    
-    Serial.printf("Fetching %s\n", url);      
+    String url;
+    url.reserve(256);
+    url = "http://"+ String(THINGSPEAK_HOST) +"/update?api_key="+ String(THINGSPEAK_API_KEY);
+
+    // On intègre les champs et leurs valeurs dans l'url. On filtre ceux qui ont une valeur incorrecte.
+    if (temperature >= -40 && temperature <= 80)
+      url += "&field"+ String(FIELD_TEMPERATURE) +"="+ temperature;
+
+    if (humidity >= 0 && humidity < 200)
+      url += "&field"+ String(FIELD_HUMIDITY) +"="+ humidity;
+
+    if (moisture >= 0 && moisture < 200)
+      url += "&field"+ String(FIELD_MOISTURE) +"="+ moisture;
+
+    if (light >= 0 && light < 1000000)
+      url += "&field"+ String(FIELD_LIGHT) +"="+ light;
+        
+    Serial.printf("Fetching %s\n", url.c_str());      
 
     // Etablissement de la communication HTTP
     http.begin(url);
