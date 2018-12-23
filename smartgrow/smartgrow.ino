@@ -1,5 +1,5 @@
 #include "DHT22.h"
-#include "YL100.h"
+#include "SEN0193.h"
 #include "MAX44009.h"
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
@@ -21,7 +21,7 @@
 #define PIN_SCL D1
 #define PIN_SDA D2
 #define PIN_DHT D3
-#define PIN_YL100 A0
+#define PIN_SEN0193 A0
 
 // PROGRAM SETTINGS
 #define TIME_SLEEP 1000
@@ -31,7 +31,7 @@
 HTTPClient http;
 
 DHT dht(PIN_DHT, DHT22);
-YL100 yl(PIN_YL100);
+SEN0193 sen(PIN_SEN0193);
 Max44009 max44(0x4A, PIN_SDA, PIN_SCL);
 
 uint16_t cptLoop = 0;
@@ -77,7 +77,7 @@ void setup()
 
   // Initialisation pour le DHT22 et le YL100
   dht.begin();
-  yl.begin();
+  sen.begin();
 }
 
 // Fonction exécutéee en boucle une fois la fonction setup() terminée
@@ -101,7 +101,7 @@ void loop()
     cptHumidity++;
   }
 
-  float _moisture = yl.readSoilMoisture();
+  float _moisture = sen.readSoilMoisture();
   if (_moisture >= 0 && _moisture <= 200)
   {
     moisture += _moisture;

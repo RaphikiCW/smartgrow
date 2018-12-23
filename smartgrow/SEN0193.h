@@ -1,12 +1,13 @@
 #pragma once
 
-class YL100
+class SEN0193
 {
 private:
 	unsigned int pinRead;
-	float valueO2 = 700;
+	float valueO2 = 820;
+  float valueH2o = 350;
 public:
-  YL100(unsigned int _pinRead);
+  SEN0193(unsigned int _pinRead);
 	void begin();
 	float readSoilMoisture();
 };
